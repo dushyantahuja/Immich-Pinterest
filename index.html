@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Immich Gallery - Pinterest Style</title>
+  <meta name="description" content="A modern Pinterest-style masonry photo feed pulling random memories from your Immich server.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e60023'><path d='M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z'/></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-area">
+      <div class="brand-logo" title="Immich Gallery">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </div>
+      <div class="brand-title-group">
+        <span class="brand-title">Immich Gallery</span>
+        <span class="brand-badge" id="header-server-badge">Connecting...</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Favorites filter toggle -->
+      <button class="nav-pill" id="btn-filter-fav" title="Show only favorite photos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>Favorites</span>
+      </button>
+
+      <!-- Slideshow button -->
+      <button class="icon-btn" id="btn-slideshow" title="Ambient Slideshow (S)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+
+      <!-- Shuffle / Refresh button -->
+      <button class="icon-btn primary" id="btn-shuffle" title="Shuffle Random Photos (R)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+
+      <!-- Theme Switcher -->
+      <button class="icon-btn" id="btn-theme" title="Cycle Theme (Light / Dark / System)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+
+      <!-- Settings button -->
+      <button class="icon-btn" id="btn-settings" title="Immich Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Setup / API Key Banner -->
+  <aside class="setup-banner" id="setup-banner">
+    <div class="banner-content">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="banner-text">Connect to your Immich instance by adding your API key in Settings.</span>
+    </div>
+    <div class="banner-actions">
+      <button class="banner-btn primary" id="banner-open-settings">Enter API Key</button>
+      <button class="banner-btn secondary" id="banner-enable-demo">Try Demo Mode</button>
+    </div>
+  </aside>
+
+  <!-- Main Feed Area -->
+  <main class="main-content">
+    <div id="gallery-container"></div>
+    
+    <!-- Loading Spinner -->
+    <div class="loading-spinner-container" id="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Infinite Scroll Sentinel -->
+    <div id="scroll-sentinel"></div>
+  </main>
+
+  <!-- Detail / Lightbox Modal -->
+  <div class="modal" id="modal-detail" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content detail-modal-dialog">
+      <!-- Media Pane -->
+      <div class="detail-modal-media-pane">
+        <button class="modal-nav-arrow" id="modal-prev-btn" title="Previous (Left Arrow)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <img id="modal-img" src="" alt="Immich Photo Preview">
+        <button class="modal-nav-arrow" id="modal-next-btn" title="Next (Right Arrow)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Metadata & Info Sidebar -->
+      <div class="detail-modal-info-pane">
+        <div class="detail-pane-header">
+          <h4>Photo Details</h4>
+          <button class="icon-btn modal-close-btn" title="Close (Esc)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="detail-pane-body">
+          <div class="detail-title-section">
+            <h3 id="modal-title">Photo</h3>
+          </div>
+
+          <div class="exif-grid">
+            <!-- Date -->
+            <div class="exif-row">
+              <span class="exif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </span>
+              <span class="exif-text" id="modal-date">-</span>
+            </div>
+
+            <!-- Location -->
+            <div class="exif-row">
+              <span class="exif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              <span class="exif-text" id="modal-location">-</span>
+            </div>
+
+            <!-- Camera -->
+            <div class="exif-row">
+              <span class="exif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+              <span class="exif-text" id="modal-camera">-</span>
+            </div>
+
+            <!-- Lens -->
+            <div class="exif-row">
+              <span class="exif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <span class="exif-text" id="modal-lens">-</span>
+            </div>
+
+            <!-- Exposure settings -->
+            <div class="exif-row">
+              <span class="exif-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="14.31" y1="8" x2="20.05" y2="17.94"/><line x1="9.69" y1="8" x2="21.17" y2="8"/><line x1="7.38" y1="12" x2="13.12" y2="2.06"/><line x1="9.69" y1="16" x2="3.95" y2="6.06"/><line x1="14.31" y1="16" x2="2.83" y2="16"/><line x1="16.62" y1="12" x2="10.88" y2="21.94"/></svg>
+              </span>
+              <span class="exif-text" id="modal-exposure">-</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="detail-pane-actions">
+            <a href="#" target="_blank" rel="noopener noreferrer" class="action-btn-full immich" id="modal-immich-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Open in Immich</span>
+            </a>
+
+            <a href="#" target="_blank" rel="noopener noreferrer" class="action-btn-full secondary" id="modal-download-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download Original</span>
+            </a>
+
+            <button class="action-btn-full secondary" id="modal-copy-link-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span>Copy Link</span>
+            </button>
+
+            <button class="action-btn-full secondary" id="modal-fav-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Favorite</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="modal-settings" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content settings-modal-dialog">
+      <div class="modal-header-row">
+        <h3>Immich Settings</h3>
+        <button class="icon-btn modal-close-btn" title="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="form-settings">
+        <!-- Immich Server URL -->
+        <div class="form-group">
+          <label for="input-server-url">Immich Server URL</label>
+          <input type="url" id="input-server-url" class="form-control" placeholder="http://localhost:2283" required>
+          <span class="form-hint">Address of your Immich instance (without trailing slash)</span>
+        </div>
+
+        <!-- API Key -->
+        <div class="form-group">
+          <label for="input-api-key">API Key</label>
+          <div class="input-with-btn">
+            <input type="password" id="input-api-key" class="form-control" placeholder="Enter your Immich API Key">
+            <button type="button" class="btn btn-secondary" id="btn-toggle-apikey-visibility">Show</button>
+          </div>
+          <span class="form-hint">Generated in Immich Web UI &rarr; Account Settings &rarr; API Keys</span>
+        </div>
+
+        <!-- Connection Test -->
+        <div class="form-group">
+          <button type="button" class="btn btn-secondary" id="btn-test-connection">Test Connection</button>
+          <div id="connection-status-msg" class="status-message"></div>
+        </div>
+
+        <!-- Batch Size -->
+        <div class="form-group">
+          <label for="select-batch-size">Photos per Batch</label>
+          <select id="select-batch-size" class="form-control">
+            <option value="15">15 photos</option>
+            <option value="30" selected>30 photos (Recommended)</option>
+            <option value="50">50 photos</option>
+            <option value="100">100 photos</option>
+          </select>
+        </div>
+
+        <!-- Slideshow Interval -->
+        <div class="form-group">
+          <label for="input-slideshow-interval">Slideshow Speed (Seconds)</label>
+          <input type="number" id="input-slideshow-interval" class="form-control" min="2" max="60" value="5">
+        </div>
+
+        <!-- Theme Preference -->
+        <div class="form-group">
+          <label for="select-theme">Theme</label>
+          <select id="select-theme" class="form-control">
+            <option value="system">System Default</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+
+        <!-- Demo Mode Checkbox -->
+        <div class="form-group">
+          <label class="form-checkbox-label">
+            <input type="checkbox" id="check-demo-mode">
+            <span>Demo Mode (Use sample gallery without Immich connection)</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Reload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Fullscreen Slideshow Overlay -->
+  <div class="slideshow-overlay" id="slideshow-container">
+    <div class="slideshow-progress">
+      <div id="slideshow-progress-bar"></div>
+    </div>
+    
+    <div class="slideshow-image-container">
+      <img id="slideshow-img" src="" alt="Slideshow Image">
+    </div>
+
+    <div class="slideshow-hud">
+      <button class="hud-btn" id="slideshow-prev-btn" title="Previous (Left Arrow)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+
+      <button class="hud-btn" id="slideshow-pause-btn" title="Pause (Space)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+
+      <button class="hud-btn" id="slideshow-next-btn" title="Next (Right Arrow)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <div class="slideshow-info">
+        <div id="slideshow-title">Slideshow</div>
+        <div id="slideshow-meta"></div>
+      </div>
+
+      <button class="hud-btn" id="slideshow-exit-btn" title="Exit (Esc)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Module Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

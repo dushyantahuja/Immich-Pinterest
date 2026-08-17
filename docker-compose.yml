@@ -1,0 +1,31 @@
+services:
+  immich-pinterest:
+    build: .
+    container_name: immich-pinterest
+    restart: unless-stopped
+    ports:
+      # Expose on host port 8080 (or change to 8041, etc.)
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      # Point to your Immich instance (or Docker container name if on the same network)
+      - IMMICH_URL=http://immich_server:2283
+
+    # =========================================================================
+    # OPTIONAL: Traefik Reverse Proxy Configuration
+    # Uncomment/customize if you use Traefik to route traffic via domain name.
+    # Otherwise, you can remove these labels and the external network below.
+    # =========================================================================
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.immich-pinterest.entrypoints=web"
+      - "traefik.http.routers.immich-pinterest.rule=Host(`gallery.example.local`)"
+      - "traefik.http.services.immich-pinterest.loadbalancer.server.port=8080"
+    networks:
+      - default
+      - traefik_proxy
+
+networks:
+  # Optional Traefik network (set to external if your Traefik runs in a shared network)
+  traefik_proxy:
+    external: true
