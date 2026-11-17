@@ -15,11 +15,11 @@ Built with **plain HTML, CSS, and modern JavaScript** (no `npm` or build steps r
 - **Instant Shuffle**: Click **Shuffle (R)** to instantly refresh the feed with a fresh set of random memories.
 - **Detailed Lightbox Modal**:
   - Full-resolution preview
-  - Rich EXIF metadata drawer (Camera body, lens, exposure time, f-stop, ISO, focal length, date taken, location)
+  - Rich EXIF metadata drawer (Camera body, lens, exposure time, f-stop, ISO, focal length, date taken, location, original file path)
   - Direct deep link to open the photo in Immich Web UI (`/photos/{id}`)
   - Download original image button
   - Copy link button
-- **Favorites Filter**: Filter your random feed to only display favorited memories.
+- **Favourites Filter**: Filter your random feed to only display favourited memories.
 - **Ambient Slideshow Mode (S)**: Fullscreen ambient photo viewer with smooth transitions, progress bar, and play/pause controls.
 - **Dark & Light Themes**: Adapts automatically to your OS preference with manual override.
 - **Demo Mode**: Test and preview the interface immediately with sample photography even before configuring your Immich API key.
@@ -82,6 +82,7 @@ Immich Pinterest/
 │   └── app.js       # Main application state and UI interactions
 ├── Dockerfile       # Docker container definition
 ├── docker-compose.yml # Docker Compose configuration
+├── server.py        # Concurrent multi-threaded proxy server
 ├── .gitignore       # Git ignore configuration
 └── README.md        # Documentation
 ```
