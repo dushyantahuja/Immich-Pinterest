@@ -177,6 +177,7 @@ class App {
     const lens = document.getElementById('modal-lens');
     const exposure = document.getElementById('modal-exposure');
     const location = document.getElementById('modal-location');
+    const path = document.getElementById('modal-path');
     const immichLink = document.getElementById('modal-immich-link');
     const downloadLink = document.getElementById('modal-download-link');
     const copyLinkBtn = document.getElementById('modal-copy-link-btn');
@@ -226,6 +227,16 @@ class App {
       location.parentElement.style.display = 'flex';
     } else {
       location.parentElement.style.display = 'none';
+    }
+
+    if (path) {
+      if (asset.originalPath) {
+        path.textContent = asset.originalPath;
+        path.title = asset.originalPath;
+        path.parentElement.style.display = 'flex';
+      } else {
+        path.parentElement.style.display = 'none';
+      }
     }
 
     // Links & Actions

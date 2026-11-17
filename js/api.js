@@ -374,6 +374,7 @@ function normalizeAsset(raw) {
   return {
     id: assetId,
     originalFileName: raw.originalFileName || raw.originalPath || raw.name || 'Photo',
+    originalPath: raw.originalPath || raw.path || '',
     type: raw.type || 'IMAGE',
     isFavorite,
     isArchived: Boolean(raw.isArchived),
@@ -473,6 +474,7 @@ function getSampleDemoAssets(count = 20) {
     results.push({
       id: uniqueId,
       originalFileName: `${template.title.toLowerCase().replace(/\s+/g, '_')}.jpg`,
+      originalPath: `/photos/library/${template.title.toLowerCase().replace(/\s+/g, '_')}.jpg`,
       type: 'IMAGE',
       isFavorite: template.isFavorite,
       isArchived: false,
