@@ -9,7 +9,9 @@ import {
   testConnection, 
   getThumbnailUrl, 
   getOriginalUrl, 
-  getImmichWebUrl 
+  getImmichWebUrl,
+  saveLocalFavorite,
+  updateImmichAssetFavorite
 } from './api.js';
 import { GalleryGrid } from './grid.js';
 
@@ -241,13 +243,7 @@ class App {
     // Favorite button
     modalFavBtn.classList.toggle('active', asset.isFavorite);
     modalFavBtn.onclick = () => {
-      asset.isFavorite = !asset.isFavorite;
-      modalFavBtn.classList.toggle('active', asset.isFavorite);
-      const card = document.querySelector(`.pin-card[data-id="${asset.id}"]`);
-      if (card) {
-        const fav = card.querySelector('.pin-fav-btn');
-        if (fav) fav.classList.toggle('active', asset.isFavorite);
-      }
+      this.toggleAssetFavorite(asset);
     };
 
     // Image loading
@@ -571,7 +567,72 @@ class App {
   }
 
   handleFavoriteToggled(asset) {
-    // Optional callback for favorites
+    if (!asset || !asset.id) return;
+    this.persistFavoriteState(asset);
+  }
+
+  toggleAssetFavorite(asset) {
+    if (!asset || !asset.id) return;
+    asset.isFavorite = !asset.isFavorite;
+    this.persistFavoriteState(asset);
+  }
+
+  async persistFavoriteState(asset) {
+    // 1. Immediately persist locally to localStorage
+    saveLocalFavorite(asset.id, asset.isFavorite);
+
+    // 2. Synchronise UI for both card and modal
+    this.updateCardFavoriteUI(asset.id, asset.isFavorite);
+
+    // 3. Sync upstream with Immich API
+    const res = await updateImmichAssetFavorite(asset.id, asset.isFavorite);
+    if (!res.success) {
+      if (res.error?.includes('asset.update')) {
+        this.showToast("Saved favourite locally. Add 'Asset: Update' to your Immich API key to sync with Immich.");
+      } else {
+        console.warn('Immich favourite sync warning:', res.error);
+      }
+    }
+  }
+
+  updateCardFavoriteUI(assetId, isFavorite) {
+    // Update card button in grid
+    const card = document.querySelector(`.pin-card[data-id="${assetId}"]`);
+    if (card) {
+      const favBtn = card.querySelector('.pin-fav-btn');
+      if (favBtn) {
+        favBtn.classList.toggle('active', isFavorite);
+        favBtn.title = isFavorite ? 'Favorited' : 'Favorite';
+        const svg = favBtn.querySelector('svg');
+        if (svg) svg.setAttribute('fill', isFavorite ? 'currentColor' : 'none');
+      }
+    }
+
+    // Update modal favorite button if detail modal is open for this asset
+    const modalFavBtn = document.getElementById('modal-fav-btn');
+    if (modalFavBtn && this.assets[this.currentIndex]?.id === assetId) {
+      modalFavBtn.classList.toggle('active', isFavorite);
+      const span = modalFavBtn.querySelector('span');
+      if (span) span.textContent = isFavorite ? 'Favorited' : 'Favorite';
+      const svg = modalFavBtn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', isFavorite ? 'currentColor' : 'none');
+    }
+  }
+
+  showToast(message, durationMs = 4500) {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      toast.className = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      toast.classList.remove('visible');
+    }, durationMs);
   }
 }
 

@@ -3,6 +3,7 @@
  */
 
 const STORAGE_KEY = 'immich_pinterest_settings';
+const FAVORITES_STORAGE_KEY = 'immich_pinterest_local_favorites';
 
 export const defaultSettings = {
   serverUrl: 'http://localhost:2283',
@@ -90,6 +91,74 @@ export function getImmichWebUrl(asset) {
   const baseUrl = settings.serverUrl.replace(/\/+$/, '');
   if (asset.isDemo) return `${baseUrl}/photos`;
   return `${baseUrl}/photos/${asset.id}`;
+}
+
+/**
+ * Get locally saved favourite asset IDs
+ */
+export function getLocalFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Persist favourite asset ID to localStorage
+ */
+export function saveLocalFavorite(assetId, isFavorite) {
+  try {
+    const favorites = getLocalFavorites();
+    if (isFavorite) {
+      favorites.add(assetId);
+    } else {
+      favorites.delete(assetId);
+    }
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favorites)));
+  } catch (e) {
+    console.warn('Failed to save favourite to localStorage', e);
+  }
+}
+
+/**
+ * Update asset favourite status in Immich upstream API
+ */
+export async function updateImmichAssetFavorite(assetId, isFavorite) {
+  const settings = getSettings();
+  if (settings.demoMode || !assetId) {
+    return { success: true, localOnly: true };
+  }
+
+  const baseUrl = getApiBaseUrl();
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+
+  if (settings.apiKey) {
+    headers['x-api-key'] = settings.apiKey;
+  }
+
+  try {
+    const url = `${baseUrl}/api/assets/${assetId}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ isFavorite })
+    });
+
+    if (response.ok) {
+      return { success: true };
+    }
+
+    const data = await response.json().catch(() => ({}));
+    const message = data.message || `HTTP ${response.status}`;
+    return { success: false, error: message };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 }
 
 /**
@@ -298,11 +367,15 @@ function normalizeAsset(raw) {
     aspectRatio = 0.75;
   }
 
+  const assetId = raw.id || raw.assetId || raw.uuid;
+  const localFavs = getLocalFavorites();
+  const isFavorite = Boolean(raw.isFavorite) || localFavs.has(assetId);
+
   return {
-    id: raw.id || raw.assetId || raw.uuid,
+    id: assetId,
     originalFileName: raw.originalFileName || raw.originalPath || raw.name || 'Photo',
     type: raw.type || 'IMAGE',
-    isFavorite: Boolean(raw.isFavorite),
+    isFavorite,
     isArchived: Boolean(raw.isArchived),
     duration: raw.duration,
     dateTaken,

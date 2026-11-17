@@ -19,7 +19,7 @@ class ImmichProxyHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         # Add CORS headers for local development
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH')
         self.send_header('Access-Control-Allow-Headers', 'x-api-key, Content-Type, Authorization')
         super().end_headers()
 
@@ -45,10 +45,28 @@ class ImmichProxyHandler(SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "Not Found")
 
+    def do_PUT(self):
+        if self.path.startswith('/api/'):
+            self.proxy_request('PUT')
+        else:
+            self.send_error(404, "Not Found")
+
+    def do_PATCH(self):
+        if self.path.startswith('/api/'):
+            self.proxy_request('PATCH')
+        else:
+            self.send_error(404, "Not Found")
+
+    def do_DELETE(self):
+        if self.path.startswith('/api/'):
+            self.proxy_request('DELETE')
+        else:
+            self.send_error(404, "Not Found")
+
     def proxy_request(self, method):
         target_url = f"{TARGET_IMMICH}{self.path}"
         
-        # Read request body if POST
+        # Read request body if method has payload (POST, PUT, PATCH)
         content_length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(content_length) if content_length > 0 else None
 

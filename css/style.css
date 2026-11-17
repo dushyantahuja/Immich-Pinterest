@@ -1093,3 +1093,33 @@ a {
   background-color: rgba(255, 255, 255, 0.3);
   transform: scale(1.08);
 }
+
+/* ---------------- Notification Toast ---------------- */
+
+.app-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.88rem;
+  font-weight: 500;
+  z-index: 3000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.app-toast.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}

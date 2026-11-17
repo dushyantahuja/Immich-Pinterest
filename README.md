@@ -49,7 +49,7 @@ Access at `http://localhost:8080`.
 
 1. Open your Immich web interface.
 2. Go to **Account Settings** -> **API Keys**.
-3. Click **New API Key**, give it a name (e.g., *Pinterest Web App*), choose `Asset: Read` and `Asset: View` as permissions, and copy the generated key.
+3. Click **New API Key**, give it a name (e.g., *Pinterest Web App*), choose `Asset: Read`, `Asset: View`, and `Asset: Update` (to save favourites) as permissions, and copy the generated key.
 4. In the **Immich Pinterest** app, click the **Settings** button in the top right.
 5. Paste your Server URL and API Key and verify connection using the **Test Connection** button.
 6. Click **Save & Reload**!
