@@ -97,6 +97,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  overflow-anchor: none;
 }
 
 body {
@@ -369,6 +370,7 @@ a {
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   cursor: pointer;
   position: relative;
+  contain: layout style;
 }
 
 .pin-card:hover {
@@ -542,14 +544,20 @@ a {
 /* ---------------- Spinner & Sentinel ---------------- */
 
 .loading-spinner-container {
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
-  padding: 30px 0;
+  height: 60px;
+  margin: 16px auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  pointer-events: none;
 }
 
 .loading-spinner-container.visible {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
 }
 
 .spinner {
@@ -562,7 +570,9 @@ a {
 }
 
 #scroll-sentinel {
-  height: 20px;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
 }
 
 /* ---------------- Empty / Error States ---------------- */

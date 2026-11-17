@@ -20,7 +20,6 @@ export class GalleryGrid {
     this.columnCount = 0;
     this.observer = null;
     this.isLoading = false;
-    this.preloadedUrls = new Set();
 
     this.init();
   }
@@ -28,7 +27,6 @@ export class GalleryGrid {
   init() {
     this.container.classList.add('masonry-grid');
     this.setupScrollObserver();
-    this.setupWindowScrollListener();
     this.setupResizeListener();
   }
 
@@ -93,6 +91,7 @@ export class GalleryGrid {
 
     this.setupColumns(newCount);
     const colWidth = this.columns[0]?.offsetWidth || 300;
+    const colFragments = this.columns.map(() => document.createDocumentFragment());
 
     cards.forEach((card, idx) => {
       const asset = items[idx];
@@ -106,12 +105,19 @@ export class GalleryGrid {
         }
       }
 
-      this.columns[minColIndex].appendChild(card);
+      colFragments[minColIndex].appendChild(card);
 
       const ar = asset?.aspectRatio || 0.75;
-      const estimatedCardHeight = (colWidth / ar) + 65 + 16;
+      const hasSubtitle = Boolean(asset?.location || asset?.camera || asset?.dateTaken);
+      const estimatedCardHeight = (colWidth / ar) + (hasSubtitle ? 60 : 42) + 16;
       this.columnHeights[minColIndex] += estimatedCardHeight;
     });
+
+    for (let i = 0; i < this.columns.length; i++) {
+      if (colFragments[i].hasChildNodes()) {
+        this.columns[i].appendChild(colFragments[i]);
+      }
+    }
 
     requestAnimationFrame(() => {
       if (this.columns) {
@@ -122,6 +128,9 @@ export class GalleryGrid {
     });
   }
 
+  /**
+   * Hardware-accelerated intersection observer for smooth, jump-free preloading
+   */
   setupScrollObserver() {
     const sentinel = document.getElementById('scroll-sentinel');
     if (!sentinel) return;
@@ -130,34 +139,18 @@ export class GalleryGrid {
       this.observer.disconnect();
     }
 
-    // Trigger preload well before reaching the bottom (1600px margin)
+    // Preload when sentinel is within 800px of the viewport
     this.observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (entry.isIntersecting && !this.isLoading && this.items.length > 0) {
         this.onRequestAppend();
       }
     }, {
-      rootMargin: '1600px',
-      threshold: 0.01
+      rootMargin: '800px 0px 800px 0px',
+      threshold: 0
     });
 
     this.observer.observe(sentinel);
-  }
-
-  setupWindowScrollListener() {
-    let scrollTimeout = null;
-    window.addEventListener('scroll', () => {
-      if (this.isLoading || this.items.length === 0) return;
-
-      if (scrollTimeout) return;
-      scrollTimeout = setTimeout(() => {
-        scrollTimeout = null;
-        const scrollBottom = document.documentElement.scrollHeight - (window.innerHeight + window.scrollY);
-        if (scrollBottom < 1800 && !this.isLoading) {
-          this.onRequestAppend();
-        }
-      }, 150);
-    }, { passive: true });
   }
 
   setLoading(loading) {
@@ -166,12 +159,20 @@ export class GalleryGrid {
     if (loader) {
       loader.classList.toggle('visible', loading);
     }
+
+    // When loading finishes, re-evaluate sentinel intersection state
+    if (!loading && this.observer) {
+      const sentinel = document.getElementById('scroll-sentinel');
+      if (sentinel) {
+        this.observer.unobserve(sentinel);
+        this.observer.observe(sentinel);
+      }
+    }
   }
 
   clear() {
     this.items = [];
     this.cardElements = [];
-    this.preloadedUrls.clear();
     this.container.innerHTML = '';
     this.columns = [];
     this.columnHeights = [];
@@ -179,6 +180,7 @@ export class GalleryGrid {
 
   /**
    * Append new assets strictly to the bottom of the shortest column
+   * Batches DOM insertions using DocumentFragments to avoid layout thrashing
    */
   appendAssets(assets) {
     if (!assets || assets.length === 0) return;
@@ -199,6 +201,7 @@ export class GalleryGrid {
     }
 
     const colWidth = this.columns[0]?.offsetWidth || 300;
+    const colFragments = this.columns.map(() => document.createDocumentFragment());
 
     validAssets.forEach((asset, idx) => {
       const card = this.createCardElement(asset, startIndex + idx);
@@ -214,16 +217,21 @@ export class GalleryGrid {
         }
       }
 
-      this.columns[minColIndex].appendChild(card);
+      colFragments[minColIndex].appendChild(card);
 
-      // Estimate card height based on aspect ratio
+      // Estimate card height based on aspect ratio and presence of subtitle
       const ar = asset.aspectRatio || 0.75;
-      const estimatedCardHeight = (colWidth / ar) + 65 + 16;
+      const hasSubtitle = Boolean(asset.location || asset.camera || asset.dateTaken);
+      const estimatedCardHeight = (colWidth / ar) + (hasSubtitle ? 60 : 42) + 16;
       this.columnHeights[minColIndex] += estimatedCardHeight;
-
-      // Background pre-decode image for instant rendering
-      this.preloadImage(asset);
     });
+
+    // Single batch append per column
+    for (let i = 0; i < this.columns.length; i++) {
+      if (colFragments[i].hasChildNodes()) {
+        this.columns[i].appendChild(colFragments[i]);
+      }
+    }
 
     // Re-synchronise actual heights after DOM render
     requestAnimationFrame(() => {
@@ -233,18 +241,6 @@ export class GalleryGrid {
         }
       }
     });
-  }
-
-  preloadImage(asset) {
-    const thumbUrl = getThumbnailUrl(asset, 'preview');
-    if (!thumbUrl || this.preloadedUrls.has(thumbUrl)) return;
-    this.preloadedUrls.add(thumbUrl);
-
-    const img = new Image();
-    img.src = thumbUrl;
-    if ('decode' in img) {
-      img.decode().catch(() => {});
-    }
   }
 
   createCardElement(asset, index) {
