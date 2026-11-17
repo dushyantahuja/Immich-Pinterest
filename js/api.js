@@ -58,7 +58,7 @@ export function getApiBaseUrl() {
 /**
  * Format asset thumbnail URL with authentication
  */
-export function getThumbnailUrl(asset, size = 'preview') {
+export function getThumbnailUrl(asset, size = 'thumbnail') {
   if (!asset) return '';
   if (asset.isDemo) return asset.demoUrl || asset.thumbnailUrl;
 

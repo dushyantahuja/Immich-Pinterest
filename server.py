@@ -10,7 +10,7 @@ import os
 import gzip
 import urllib.request
 import urllib.error
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 PORT = int(os.environ.get('PORT', 8080))
 TARGET_IMMICH = os.environ.get('IMMICH_URL', 'http://localhost:2283').rstrip('/')
@@ -19,13 +19,19 @@ class ImmichProxyHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         # Add CORS headers for local development
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
         self.send_header('Access-Control-Allow-Headers', 'x-api-key, Content-Type, Authorization')
         super().end_headers()
 
     def do_OPTIONS(self):
         self.send_response(204)
         self.end_headers()
+
+    def do_HEAD(self):
+        if self.path.startswith('/api/'):
+            self.proxy_request('HEAD')
+        else:
+            super().do_HEAD()
 
     def do_GET(self):
         if self.path.startswith('/api/'):
@@ -100,9 +106,10 @@ class ImmichProxyHandler(SimpleHTTPRequestHandler):
 def run():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     server_address = ('', PORT)
-    httpd = HTTPServer(server_address, ImmichProxyHandler)
+    httpd = ThreadingHTTPServer(server_address, ImmichProxyHandler)
+    httpd.daemon_threads = True
     print("=" * 60)
-    print(f" Immich Pinterest Gallery Server Running!")
+    print(f" Immich Pinterest Gallery Server Running (Multi-threaded)!")
     print(f" -> Open in browser: http://localhost:{PORT}")
     print(f" -> Proxying /api to: {TARGET_IMMICH}")
     print("=" * 60)

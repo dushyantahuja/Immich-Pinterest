@@ -250,7 +250,7 @@ export class GalleryGrid {
     card.dataset.index = index;
 
     const ar = asset.aspectRatio || 0.75;
-    const thumbUrl = getThumbnailUrl(asset, 'preview');
+    const thumbUrl = getThumbnailUrl(asset, 'thumbnail');
     const immichWebUrl = getImmichWebUrl(asset);
 
     // Subtitle label
