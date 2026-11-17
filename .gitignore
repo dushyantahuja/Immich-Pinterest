@@ -15,4 +15,6 @@
 # Local environment / secrets
 .env
 .env.local
+docker-compose.override.yml
+NOTE.md
 *.log

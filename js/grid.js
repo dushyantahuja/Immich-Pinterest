@@ -1,5 +1,7 @@
 /**
  * Masonry & Infinite Grid Controller with Layout Stability & Smooth Preloading
+ * Uses multi-column flex containers to ensure items are appended strictly to
+ * the bottom of the shortest column, preventing items jumping to the top of the feed.
  */
 
 import { getThumbnailUrl, getImmichWebUrl } from './api.js';
@@ -10,8 +12,12 @@ export class GalleryGrid {
     this.onRequestAppend = options.onRequestAppend || (() => {});
     this.onItemClick = options.onItemClick || (() => {});
     this.onFavoriteClick = options.onFavoriteClick || (() => {});
-    
+
     this.items = [];
+    this.cardElements = [];
+    this.columns = [];
+    this.columnHeights = [];
+    this.columnCount = 0;
     this.observer = null;
     this.isLoading = false;
     this.preloadedUrls = new Set();
@@ -20,9 +26,100 @@ export class GalleryGrid {
   }
 
   init() {
-    this.container.classList.add('native-masonry-container');
+    this.container.classList.add('masonry-grid');
     this.setupScrollObserver();
     this.setupWindowScrollListener();
+    this.setupResizeListener();
+  }
+
+  /**
+   * Determine column count based on viewport width matching media queries
+   */
+  getColumnCount() {
+    const width = window.innerWidth;
+    if (width <= 600) return 2;
+    if (width <= 960) return 3;
+    if (width <= 1400) return 4;
+    if (width <= 1900) return 5;
+    return 6;
+  }
+
+  /**
+   * Initialise column wrapper elements
+   */
+  setupColumns(columnCount = null) {
+    this.columnCount = columnCount || this.getColumnCount();
+    this.container.innerHTML = '';
+    this.columns = [];
+    this.columnHeights = [];
+
+    for (let i = 0; i < this.columnCount; i++) {
+      const col = document.createElement('div');
+      col.className = 'masonry-column';
+      this.container.appendChild(col);
+      this.columns.push(col);
+      this.columnHeights.push(0);
+    }
+  }
+
+  /**
+   * Listen for window resize to reorganise columns when breakpoint changes
+   */
+  setupResizeListener() {
+    let resizeTimeout = null;
+    window.addEventListener('resize', () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (!this.items.length) return;
+        const newCount = this.getColumnCount();
+        if (newCount !== this.columnCount) {
+          this.rebuildGrid(newCount);
+        }
+      }, 150);
+    }, { passive: true });
+  }
+
+  /**
+   * Reorganise existing cards across new number of columns preserving order
+   */
+  rebuildGrid(newCount) {
+    if (!this.items.length || !this.cardElements.length) {
+      this.setupColumns(newCount);
+      return;
+    }
+
+    const cards = [...this.cardElements];
+    const items = [...this.items];
+
+    this.setupColumns(newCount);
+    const colWidth = this.columns[0]?.offsetWidth || 300;
+
+    cards.forEach((card, idx) => {
+      const asset = items[idx];
+
+      let minColIndex = 0;
+      let minHeight = this.columnHeights[0];
+      for (let i = 1; i < this.columnHeights.length; i++) {
+        if (this.columnHeights[i] < minHeight) {
+          minHeight = this.columnHeights[i];
+          minColIndex = i;
+        }
+      }
+
+      this.columns[minColIndex].appendChild(card);
+
+      const ar = asset?.aspectRatio || 0.75;
+      const estimatedCardHeight = (colWidth / ar) + 65 + 16;
+      this.columnHeights[minColIndex] += estimatedCardHeight;
+    });
+
+    requestAnimationFrame(() => {
+      if (this.columns) {
+        for (let i = 0; i < this.columns.length; i++) {
+          this.columnHeights[i] = this.columns[i].offsetHeight || this.columnHeights[i];
+        }
+      }
+    });
   }
 
   setupScrollObserver() {
@@ -33,7 +130,7 @@ export class GalleryGrid {
       this.observer.disconnect();
     }
 
-    // Trigger preload well before the user reaches the bottom (1600px margin)
+    // Trigger preload well before reaching the bottom (1600px margin)
     this.observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (entry.isIntersecting && !this.isLoading && this.items.length > 0) {
@@ -51,7 +148,7 @@ export class GalleryGrid {
     let scrollTimeout = null;
     window.addEventListener('scroll', () => {
       if (this.isLoading || this.items.length === 0) return;
-      
+
       if (scrollTimeout) return;
       scrollTimeout = setTimeout(() => {
         scrollTimeout = null;
@@ -73,30 +170,69 @@ export class GalleryGrid {
 
   clear() {
     this.items = [];
+    this.cardElements = [];
     this.preloadedUrls.clear();
     this.container.innerHTML = '';
+    this.columns = [];
+    this.columnHeights = [];
   }
 
+  /**
+   * Append new assets strictly to the bottom of the shortest column
+   */
   appendAssets(assets) {
     if (!assets || assets.length === 0) return;
 
     const validAssets = assets.filter(a => a && a.id);
     if (validAssets.length === 0) return;
 
+    if (!this.columns || this.columns.length === 0) {
+      this.setupColumns();
+    }
+
     const startIndex = this.items.length;
     this.items.push(...validAssets);
 
-    const fragment = document.createDocumentFragment();
+    // Synchronise actual column heights before placing new batch
+    for (let i = 0; i < this.columns.length; i++) {
+      this.columnHeights[i] = this.columns[i].offsetHeight || 0;
+    }
+
+    const colWidth = this.columns[0]?.offsetWidth || 300;
 
     validAssets.forEach((asset, idx) => {
       const card = this.createCardElement(asset, startIndex + idx);
-      fragment.appendChild(card);
-      
+      this.cardElements.push(card);
+
+      // Identify column with minimum height
+      let minColIndex = 0;
+      let minHeight = this.columnHeights[0];
+      for (let i = 1; i < this.columnHeights.length; i++) {
+        if (this.columnHeights[i] < minHeight) {
+          minHeight = this.columnHeights[i];
+          minColIndex = i;
+        }
+      }
+
+      this.columns[minColIndex].appendChild(card);
+
+      // Estimate card height based on aspect ratio
+      const ar = asset.aspectRatio || 0.75;
+      const estimatedCardHeight = (colWidth / ar) + 65 + 16;
+      this.columnHeights[minColIndex] += estimatedCardHeight;
+
       // Background pre-decode image for instant rendering
       this.preloadImage(asset);
     });
 
-    this.container.appendChild(fragment);
+    // Re-synchronise actual heights after DOM render
+    requestAnimationFrame(() => {
+      if (this.columns) {
+        for (let i = 0; i < this.columns.length; i++) {
+          this.columnHeights[i] = this.columns[i].offsetHeight || this.columnHeights[i];
+        }
+      }
+    });
   }
 
   preloadImage(asset) {
@@ -120,7 +256,7 @@ export class GalleryGrid {
     const ar = asset.aspectRatio || 0.75;
     const thumbUrl = getThumbnailUrl(asset, 'preview');
     const immichWebUrl = getImmichWebUrl(asset);
-    
+
     // Subtitle label
     let subtitle = '';
     if (asset.location) {

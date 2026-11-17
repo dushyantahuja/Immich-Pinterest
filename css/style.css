@@ -305,31 +305,56 @@ a {
   margin: 0 auto;
 }
 
-/* Native CSS Masonry Fallback */
-.native-masonry-container {
-  column-count: 5;
-  column-gap: 16px;
+/* True Pinterest Multi-Column Flex Masonry Grid */
+.masonry-grid {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin: 0 auto;
+  gap: 16px;
+  position: relative;
+}
+
+.masonry-column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.masonry-column .pin-card {
+  margin-bottom: 0;
+}
+
+.masonry-grid:has(.gallery-empty-state) {
+  display: block;
 }
 
 @media (max-width: 600px) {
-  .native-masonry-container { column-count: 2; column-gap: 10px; }
+  .masonry-grid { gap: 10px; }
+  .masonry-column { gap: 10px; }
   .main-content { padding: 12px 8px 40px 8px; }
 }
 
 @media (min-width: 601px) and (max-width: 960px) {
-  .native-masonry-container { column-count: 3; column-gap: 14px; }
+  .masonry-grid { gap: 14px; }
+  .masonry-column { gap: 14px; }
 }
 
 @media (min-width: 961px) and (max-width: 1400px) {
-  .native-masonry-container { column-count: 4; column-gap: 16px; }
+  .masonry-grid { gap: 16px; }
+  .masonry-column { gap: 16px; }
 }
 
 @media (min-width: 1401px) and (max-width: 1900px) {
-  .native-masonry-container { column-count: 5; column-gap: 16px; }
+  .masonry-grid { gap: 16px; }
+  .masonry-column { gap: 16px; }
 }
 
 @media (min-width: 1901px) {
-  .native-masonry-container { column-count: 6; column-gap: 18px; }
+  .masonry-grid { gap: 18px; }
+  .masonry-column { gap: 18px; }
 }
 
 /* ---------------- Pinterest Card ---------------- */
@@ -551,6 +576,8 @@ a {
   padding: 80px 20px;
   max-width: 500px;
   margin: 0 auto;
+  width: 100%;
+  flex: 1 1 100%;
 }
 
 .empty-icon {
